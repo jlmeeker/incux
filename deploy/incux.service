@@ -1,0 +1,31 @@
+[Unit]
+Description=Incux — web UI for Incus
+Documentation=https://github.com/jaredm/incux
+After=network.target incus.service
+Wants=incus.service
+
+[Service]
+Type=simple
+User=incux
+Group=incux
+WorkingDirectory=/var/lib/incux
+
+# Listen on localhost only. Override via environment or a drop-in:
+#   systemctl edit incux
+# to set INCUX_ADDR or add an override for ListenAddr.
+Environment="INCUX_LISTEN=127.0.0.1:8080"
+
+ExecStart=/usr/local/bin/incux
+Restart=on-failure
+RestartSec=5
+
+# Hardening
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+ReadWritePaths=/var/lib/incux
+PrivateTmp=yes
+PrivateDevices=yes
+
+[Install]
+WantedBy=multi-user.target

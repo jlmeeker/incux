@@ -1,0 +1,19 @@
+# Build artifacts
+dist/
+web/dist/
+
+# Node dependencies
+web/node_modules/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor/tool configs
+.vscode/
+.idea/
+opencode.json
+
+# Go workspace files
+go.work
+go.work.sum
