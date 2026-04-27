@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Option 4: Network nodes (3 dots connected) -->
+  <rect width="32" height="32" rx="8" fill="#1a1d27"/>
+  <!-- connections -->
+  <line x1="16" y1="16" x2="7" y2="9"  stroke="#4f6bed" stroke-width="1.5"/>
+  <line x1="16" y1="16" x2="25" y2="9" stroke="#4f6bed" stroke-width="1.5"/>
+  <line x1="16" y1="16" x2="16" y2="26" stroke="#4f6bed" stroke-width="1.5"/>
+  <!-- nodes -->
+  <circle cx="7"  cy="9"  r="3.5" fill="#4f6bed"/>
+  <circle cx="25" cy="9"  r="3.5" fill="#6b8aff"/>
+  <circle cx="16" cy="26" r="3.5" fill="#6b8aff"/>
+  <circle cx="16" cy="16" r="4"   fill="white"/>
+</svg>

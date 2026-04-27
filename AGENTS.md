@@ -1,9 +1,9 @@
 # AGENTS.md
 
-This file outlines instructions for building and running the Incux project, as well as the development guidelines discussed so far.
+This file outlines instructions for building and running the IncUX project, as well as the development guidelines discussed so far.
 
 ## Project Overview
-**Incux** is a web UI for managing Incus environments, featuring both a backend (written in Go) and a frontend (using SolidJS). The backend binary serves the website and proxies REST communications with Incus.
+**IncUX** is a web UI for managing Incus environments, featuring both a backend (written in Go) and a frontend (using SolidJS). The backend binary serves the website and proxies REST communications with Incus.
 
 ### Key Objectives:
 1. Build a backend Go binary that serves the web UI.

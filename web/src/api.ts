@@ -76,7 +76,7 @@ export interface IncusResponse<T> {
 }
 
 // ---------------------------------------------------------------------------
-// Remotes (Incux-internal endpoint, not part of Incus API)
+// Remotes (IncUX-internal endpoint, not part of Incus API)
 // ---------------------------------------------------------------------------
 export interface RemoteInfo {
   name: string;

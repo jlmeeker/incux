@@ -1,5 +1,5 @@
 [Unit]
-Description=Incux — web UI for Incus
+Description=IncUX — web UI for Incus
 Documentation=https://github.com/jaredm/incux
 After=network.target incus.service
 Wants=incus.service

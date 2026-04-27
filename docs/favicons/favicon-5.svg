@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Option 5: Gradient rounded square with stylised "In" ligature -->
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6b8aff"/>
+      <stop offset="100%" stop-color="#4f6bed"/>
+    </linearGradient>
+  </defs>
+  <rect width="32" height="32" rx="9" fill="url(#g)"/>
+  <!-- "I" vertical bar -->
+  <rect x="8" y="9" width="3.5" height="14" rx="1.5" fill="white"/>
+  <!-- "n" shape -->
+  <rect x="13.5" y="9" width="3" height="14" rx="1.5" fill="white"/>
+  <path d="M16.5 13 Q21 13 21 17.5 L21 23 L18 23 L18 17.5 Q18 16 16.5 16 Z" fill="white"/>
+</svg>

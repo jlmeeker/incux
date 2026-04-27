@@ -63,7 +63,7 @@ export function Layout(props: LayoutProps) {
       <nav class="sidebar">
         <div class="sidebar-brand">
           <span class="brand-icon">⬡</span>
-          <span class="brand-name">Incux</span>
+          <span class="brand-name">IncUX</span>
         </div>
         <ul class="nav-list">
           {NAV.map(item => (
@@ -85,7 +85,7 @@ export function Layout(props: LayoutProps) {
       <div class="main-area">
         <header class="topbar">
           <div class="topbar-title">
-            {NAV.find(n => n.href === location.pathname)?.label ?? 'Incux'}
+            {NAV.find(n => n.href === location.pathname)?.label ?? 'IncUX'}
           </div>
 
           {/* Remote switcher — always visible */}

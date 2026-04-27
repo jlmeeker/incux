@@ -17,7 +17,7 @@ func main() {
 	if addr == "" {
 		addr = ":8080"
 	}
-	log.Printf("starting Incux on %s  (Incus upstream: %s)", addr, incusAddr())
+	log.Printf("starting IncUX on %s  (Incus upstream: %s)", addr, incusAddr())
 	if err := http.ListenAndServe(addr, mux); err != nil {
 		log.Fatalf("server failed: %v", err)
 	}

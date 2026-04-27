@@ -1,8 +1,8 @@
-# Incux
+# IncUX
 
-![Incux Dashboard](docs/screenshot-light.png)
+![IncUX Dashboard](docs/screenshot-light.png)
 
-Incux is a self-contained web UI for managing Incus (Linux container/VM hypervisor) environments. A single Go binary serves the frontend and proxies all API calls to one or more Incus servers — local or remote.
+IncUX is a self-contained web UI for managing Incus (Linux container/VM hypervisor) environments. A single Go binary serves the frontend and proxies all API calls to one or more Incus servers — local or remote.
 
 ---
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# deploy.sh — build and deploy Incux to a remote server.
+# deploy.sh — build and deploy IncUX to a remote server.
 #
 # Usage:
 #   ./deploy/deploy.sh [user@]host
@@ -49,7 +49,7 @@ if [[ ! -f "$SERVICE_SRC" ]]; then
   exit 1
 fi
 
-echo "==> Deploying Incux to ${SSH_TARGET}"
+echo "==> Deploying IncUX to ${SSH_TARGET}"
 echo "    binary:  ${BINARY_SRC}"
 echo "    service: ${SERVICE_SRC} -> /etc/systemd/system/${SERVICE_NAME}.service"
 echo "    install: ${INSTALL_BIN}"
@@ -78,7 +78,7 @@ if ! id "${REMOTE_USER}" &>/dev/null; then
     --home-dir "${REMOTE_DIR}" \
     --create-home \
     --shell /usr/sbin/nologin \
-    --comment "Incux service account" \
+    --comment "IncUX service account" \
     "${REMOTE_USER}"
 else
   # User exists — ensure home dir is set correctly and exists.
@@ -121,7 +121,7 @@ sudo systemctl status "${SERVICE_NAME}" --no-pager --lines=10
 REMOTE
 
 echo
-echo "==> Done. Incux is running on ${SSH_TARGET} (listening on 127.0.0.1:8080 by default)."
+echo "==> Done. IncUX is running on ${SSH_TARGET} (listening on 127.0.0.1:8080 by default)."
 echo
 echo "    To get a shell as the service account:"
 echo "      sudo su -s /bin/bash - incux"
