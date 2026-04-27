@@ -68,8 +68,12 @@ export default function Dashboard() {
   const storagePools = () => pools()?.metadata ?? [];
 
   // networks
-  const allNets     = () => networks()?.metadata ?? [];
-  const managedNets = () => allNets().filter((n: any) => n.managed);
+  const allNets      = () => networks()?.metadata ?? [];
+  const managedNets  = () => allNets().filter((n: any) => n.managed);
+  const visibleNets  = () => allNets().filter((n: any) => {
+    const instanceCount = (n.used_by ?? []).filter((u: string) => u.includes('/instances/')).length;
+    return n.type === 'bridge' || instanceCount > 0;
+  });
 
   // warnings
   const activeWarnings = () => (warnings()?.metadata ?? []).filter((w: any) => w.status === 'new');
@@ -169,10 +173,10 @@ export default function Dashboard() {
             <span class="card-header-sub">{allNets().length} total · {managedNets().length} managed</span>
           </div>
           <Show when={networks.loading}><div class="loading">Loading…</div></Show>
-          <Show when={allNets().length === 0 && !networks.loading}>
+          <Show when={visibleNets().length === 0 && !networks.loading}>
             <div class="empty" style={{ padding: '20px' }}>No networks</div>
           </Show>
-          <Show when={allNets().length > 0}>
+          <Show when={visibleNets().length > 0}>
             <table class="data-table dash-net-table">
               <thead>
                 <tr>
@@ -183,7 +187,7 @@ export default function Dashboard() {
                 </tr>
               </thead>
               <tbody>
-                <For each={allNets()}>
+                <For each={visibleNets()}>
                   {(net: any) => {
                     const addr = net.config?.['ipv4.address'] ?? net.config?.['ipv6.address'] ?? '';
                     const instanceCount = (net.used_by ?? []).filter((u: string) => u.includes('/instances/')).length;
