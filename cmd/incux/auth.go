@@ -35,6 +35,7 @@ import (
 	"hash"
 	"log"
 	"math/big"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -58,13 +59,30 @@ type Authenticator interface {
 	Authenticate(r *http.Request) (*Identity, error)
 }
 
+// isLoopback reports whether the request originates from the loopback interface
+// (127.0.0.1 or ::1). Requests from loopback always bypass authentication.
+func isLoopback(r *http.Request) bool {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		host = r.RemoteAddr
+	}
+	ip := net.ParseIP(host)
+	return ip != nil && ip.IsLoopback()
+}
+
 // authMiddleware wraps a handler with authentication using the provided Authenticator.
 // If auth is nil (disabled), requests pass through unchanged.
+// Requests originating from loopback addresses (127.0.0.1 / ::1) always bypass
+// authentication regardless of the configured Authenticator.
 func authMiddleware(auth Authenticator, next http.Handler) http.Handler {
 	if auth == nil {
 		return next
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if isLoopback(r) {
+			next.ServeHTTP(w, r)
+			return
+		}
 		id, err := auth.Authenticate(r)
 		if err != nil {
 			authError(w, err.Error(), http.StatusUnauthorized)
