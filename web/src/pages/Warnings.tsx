@@ -23,15 +23,17 @@ export default function Warnings() {
   const [warnings, { refetch }] = createResource(remote, r =>
     fetch(`${baseForRemote(r)}/warnings?recursion=1`).then(res => res.json())
   );
-  const [actionError, setActionError] = createSignal<string | null>(null);
-  const [busy,        setBusy]        = createSignal<string | null>(null);
-  const [q,           setQ]           = createSignal('');
+  const [actionError,   setActionError]   = createSignal<string | null>(null);
+  const [busy,          setBusy]          = createSignal<string | null>(null);
+  const [q,             setQ]             = createSignal('');
+  const [showResolved,  setShowResolved]  = createSignal(false);
 
   const filtered = () => {
-    const rows = warnings()?.metadata ?? [];
+    let rows = warnings()?.metadata ?? [];
+    if (!showResolved()) rows = rows.filter((w: Warning) => w.status !== 'resolved');
     const s = q().toLowerCase();
     if (!s) return rows;
-    return rows.filter(w =>
+    return rows.filter((w: Warning) =>
       (w.last_message ?? '').toLowerCase().includes(s) ||
       (w.type ?? '').toLowerCase().includes(s) ||
       (w.severity ?? '').toLowerCase().includes(s) ||
@@ -67,6 +69,10 @@ export default function Warnings() {
         <div class="card-header">
           <span>Warnings</span>
           <div class="card-toolbar">
+            <label class="toolbar-toggle">
+              <input type="checkbox" checked={showResolved()} onChange={e => setShowResolved(e.currentTarget.checked)} />
+              Show resolved
+            </label>
             <input class="search-input" placeholder="Filter warnings…" value={q()} onInput={e => setQ(e.currentTarget.value)} />
             <button class="btn btn-sm" onClick={() => refetch()}>↻ Refresh</button>
           </div>

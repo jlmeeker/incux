@@ -198,6 +198,16 @@ a:hover { text-decoration: underline; }
   gap: .5rem;
 }
 
+.toolbar-toggle {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  font-size: .82rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
 .search-input {
   padding: .28rem .6rem;
   font-size: .82rem;
