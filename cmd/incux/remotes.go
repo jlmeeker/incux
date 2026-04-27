@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -20,13 +22,21 @@ import (
 
 // Remote represents a named Incus server connection target.
 type Remote struct {
-	Name    string `json:"name"`
-	Address string `json:"address"`
+	Name      string `json:"name"`
+	Address   string `json:"address"`
+	Reachable bool   `json:"reachable"`
 
 	// TLS fields — populated from Incus CLI config, not sent to frontend.
 	tlsClientCert []byte // PEM client cert
 	tlsClientKey  []byte // PEM client key
 }
+
+// remoteHealth caches the last known reachability state for each remote (by name).
+// All access is guarded by remoteHealthMu.
+var (
+	remoteHealth   = map[string]bool{}
+	remoteHealthMu sync.RWMutex
+)
 
 // incusConfigFile is the Incus CLI config structure (subset we care about).
 type incusConfigFile struct {
@@ -196,6 +206,104 @@ func tlsConfigForRemote(remote Remote) *tls.Config {
 	return cfg
 }
 
+// ── Health checker ────────────────────────────────────────────────────────────
+
+// probeRemote attempts a GET /1.0 against the remote and returns true if the
+// response status is 2xx.  It uses the appropriate transport (unix/http/https).
+func probeRemote(r Remote) bool {
+	const probeTimeout = 5 * time.Second
+
+	var client *http.Client
+	var targetURL string
+
+	addr := r.Address
+
+	switch {
+	case strings.HasPrefix(addr, "unix://"):
+		socketPath := strings.TrimPrefix(addr, "unix://")
+		dialer := &net.Dialer{Timeout: probeTimeout}
+		client = &http.Client{
+			Timeout: probeTimeout,
+			Transport: &http.Transport{
+				DialContext: func(ctx context.Context, _, _ string) (net.Conn, error) {
+					return dialer.DialContext(ctx, "unix", socketPath)
+				},
+			},
+		}
+		targetURL = "http://unix/1.0"
+
+	case strings.HasPrefix(addr, "https://"):
+		client = &http.Client{
+			Timeout:   probeTimeout,
+			Transport: &http.Transport{TLSClientConfig: tlsConfigForRemote(r), DisableCompression: true},
+		}
+		targetURL = strings.TrimRight(addr, "/") + "/1.0"
+
+	default: // http://
+		client = &http.Client{Timeout: probeTimeout}
+		targetURL = strings.TrimRight(addr, "/") + "/1.0"
+	}
+
+	resp, err := client.Get(targetURL) //nolint:noctx
+	if err != nil {
+		return false
+	}
+	resp.Body.Close()
+	return resp.StatusCode >= 200 && resp.StatusCode < 300
+}
+
+// startHealthChecker spawns a background goroutine that probes all registered
+// remotes concurrently on startup and then every interval (default 30s,
+// overridable via INCUS_HEALTH_INTERVAL env var, e.g. "45s").
+func startHealthChecker() {
+	interval := 30 * time.Second
+	if v := os.Getenv("INCUS_HEALTH_INTERVAL"); v != "" {
+		if d, err := time.ParseDuration(v); err == nil && d > 0 {
+			interval = d
+		} else {
+			log.Printf("health: invalid INCUS_HEALTH_INTERVAL %q, using 30s", v)
+		}
+	}
+
+	probe := func() {
+		// Snapshot the registry so we don't hold a lock during I/O.
+		remotes := listRemotesRaw()
+
+		var wg sync.WaitGroup
+		results := make([]struct {
+			name      string
+			reachable bool
+		}, len(remotes))
+
+		for i, r := range remotes {
+			wg.Add(1)
+			go func(idx int, remote Remote) {
+				defer wg.Done()
+				results[idx] = struct {
+					name      string
+					reachable bool
+				}{remote.Name, probeRemote(remote)}
+			}(i, r)
+		}
+		wg.Wait()
+
+		remoteHealthMu.Lock()
+		for _, res := range results {
+			remoteHealth[res.name] = res.reachable
+		}
+		remoteHealthMu.Unlock()
+	}
+
+	go func() {
+		probe() // immediate first run
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for range ticker.C {
+			probe()
+		}
+	}()
+}
+
 // ── Registry helpers ──────────────────────────────────────────────────────────
 
 // lookupRemote returns the Remote for the given name, and whether it exists.
@@ -204,12 +312,29 @@ func lookupRemote(name string) (Remote, bool) {
 	return r, ok
 }
 
-// listRemotes returns all remotes sorted by name for the frontend.
-func listRemotes() []Remote {
+// listRemotesRaw returns all remotes with full internal state (including TLS creds).
+// Used by the health checker for probing.
+func listRemotesRaw() []Remote {
 	out := make([]Remote, 0, len(remoteRegistry))
 	for _, r := range remoteRegistry {
-		// Only expose name + address to the frontend.
-		out = append(out, Remote{Name: r.Name, Address: r.Address})
+		out = append(out, r)
+	}
+	return out
+}
+
+// listRemotes returns all remotes sorted by name for the frontend,
+// with reachability status populated from the health cache.
+func listRemotes() []Remote {
+	remoteHealthMu.RLock()
+	health := make(map[string]bool, len(remoteHealth))
+	for k, v := range remoteHealth {
+		health[k] = v
+	}
+	remoteHealthMu.RUnlock()
+
+	out := make([]Remote, 0, len(remoteRegistry))
+	for _, r := range remoteRegistry {
+		out = append(out, Remote{Name: r.Name, Address: r.Address, Reachable: health[r.Name]})
 	}
 	sort.Slice(out, func(i, j int) bool {
 		if out[i].Name == "local" {

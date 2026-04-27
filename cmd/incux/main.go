@@ -11,6 +11,7 @@ import (
 func main() {
 	mux := http.NewServeMux()
 	registerRoutes(mux, assets.Frontend())
+	startHealthChecker()
 
 	addr := os.Getenv("INCUX_LISTEN")
 	if addr == "" {
