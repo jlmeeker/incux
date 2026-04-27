@@ -8,9 +8,8 @@ import (
 
 // registerRoutes wires all API and static routes onto mux.
 // Every /api/1.0/* route proxies through to Incus with the /api prefix stripped.
-func registerRoutes(mux *http.ServeMux, static fs.FS) {
-	auth := newAuthenticator()
-
+// auth may be nil to disable authentication (e.g. for an internal-only listener).
+func registerRoutes(mux *http.ServeMux, static fs.FS, auth Authenticator) {
 	// Middleware chain: auth → rbac → logger → proxy
 	withAuth := func(h http.Handler) http.Handler {
 		return authMiddleware(auth, rbacMiddleware(auth, h))
